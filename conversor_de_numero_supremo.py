@@ -4446,6 +4446,25 @@ encode_kanji_int = {
 '湾' : '2135',
 '腕' : '2136'}
 
+NUMS = ((1, u"一"),
+        (2, u"二"),
+        (3, u"三"),
+        (4, u"四"),
+        (5, u"五"),
+        (6, u"六"),
+        (7, u"七"),
+        (8, u"八"),
+        (9, u"九"),
+        (10, u"十"),
+        (100, u"百"),
+        (1000, u"千"),
+        (10000, u"万"),
+        (100000000, u"億"),
+        (1000000000000, u"兆"))  # não entendo de kanji. Os valores que se encontram aqui vem da seguinte fonte
+# FONTE: http://ginstrom.com/scribbles/2009/04/28/converting-kanji-numbers-to-integers-with-python/
+# E foram corrigidos conforme o site https://japanesenumberconverter.com/
+# Valores muito altos (acima de 99999) estão incorretos. Mas pode ser corrigido seguindo o site acima
+
 encode_numero = {
 '1':'1',
 '2':'2',
@@ -4459,46 +4478,96 @@ encode_numero = {
 '0':'0'
 }
 
+import pykakasi as kks
 
 
-
-
-print('='*50)
-option = 'S'
-def inteiro_outros(encode,numero,base):
-    numero_inteiro = numero
+def inteiro_outros(encode, numero, base):
+    numero_inteiro = numero  # não precisa mais dessa variavel
     base = base
-    divisao = 0
-    resultado = ""
-    #for i in range(3):
-    while numero_inteiro > 0:
-        resto = numero_inteiro % base
-        if type(base) == int:
-            divisao = int(numero_inteiro/base)
-            numero_inteiro = divisao
-            resultado = encode[str(resto)] + resultado          
-        else:           
-            if resto > 0:
-                divisao = int(numero_inteiro/base)
+    divisao = 0  # nem dessa
+    resultado = ""  # nem dessa
+    # for i in range(3):
+    if encode == encode_int_hex:
+        print(f"resuldado: {hex(numero)[2:]}")  # Transformando em hex, octa, bin mais rápidamente. Não precisa dos dicts
+    elif encode == encode_numero and base == 8:
+        print(f"resuldado: {oct(numero)[2:]}")
+    elif encode == encode_numero and base == 2:
+        print(f"resuldado: {bin(numero)[2:]}")
+    elif encode == encode_int_kanji:  # não precisa mais daquele dicionario gigante
+        numalfa = str(numero)
+        cont = ' '.join(numalfa)
+        cont = cont.split(' ')
+        for key, valor in enumerate(cont):  # apenas transformar os valores da lista criada em ints. Mas tbm poderia permanecer str
+            cont[key] = int(valor)          # e mudar os valores da tupla NUMS manualmente em str tbm
+        KANJIS = dict((num, kanji) for (num, kanji) in NUMS)  # cria dict da tupla
+        vals = cont.copy()
+        print('Resultado: ', end='')
+        for num in cont:  # transforma os valores em kanji conforme o dict KANJI. Pode ser melhorado para ficar bem menor
+            if type(vals) is None:
+                break
+            if num != 1:
+                try:  # sem esse try, se vc digitar 10, 100, 1000... ele dá um key error
+                    print(f'{KANJIS[num]}', end='')
+                except KeyError:
+                    break
+                if len(vals) == 2:
+                    print(f'{KANJIS[10]}', end='')
+                elif len(vals) == 3:
+                    print(f'{KANJIS[100]}', end='')
+                elif len(vals) == 4:
+                    print(f'{KANJIS[1000]}', end='')
+                elif 5 <= len(vals) < 9:
+                    print(f'{KANJIS[10000]}', end='')
+                elif 9 <= len(vals) < 13:
+                    print(f'{KANJIS[100000000]}', end='')
+                elif len(vals) >= 13:
+                    print(f'{KANJIS[1000000000000]}', end='')
+            else:
+                if len(vals) == 1 and num == 1:
+                    print(f'{KANJIS[num]}', end='')
+                elif len(vals) == 2:
+                    print(f'{KANJIS[10]}', end='')
+                elif len(vals) == 3:
+                    print(f'{KANJIS[100]}', end='')
+                elif len(vals) == 4:
+                    print(f'{KANJIS[1000]}', end='')
+                elif 5 <= len(vals) < 9:
+                    print(f'{KANJIS[10000]}', end='')
+                elif 9 <= len(vals) < 13:
+                    print(f'{KANJIS[100000000]}', end='')
+                elif len(vals) >= 13:
+                    print(f'{KANJIS[1000000000000]}', end='')
+            vals.remove(vals[0])
+    else:
+        while numero_inteiro > 0:
+            resto = numero_inteiro % base
+            if type(base) == int:
+                divisao = int(numero_inteiro / base)
                 numero_inteiro = divisao
                 resultado = encode[str(resto)] + resultado
-            if resto <=0:
-                break
-    print(f"resuldado: {resultado}") 
+            else:
+                if resto > 0:
+                    divisao = int(numero_inteiro / base)
+                    numero_inteiro = divisao
+                    resultado = encode[str(resto)] + resultado
+                if resto <= 0:
+                    break
+        print(f"resuldado: {resultado}")
+    print()
 
 def outros_inteiro():
     option = "S"
     while option == 'S':
-        print('='*50)
-        print('='*50)
-        print('='*50)
-        print('='*50)
+        print('=' * 50)
+        print('=' * 50)
+        print('=' * 50)
+        print('=' * 50)
         num = input('Write the number: ').upper()
         num_dec = num.isdecimal()
         num_alph = num.isalpha()
         num_alphanum = num.isalnum()
-        
-        def calculador(encode,base,b):
+
+        def calculador(encode, base, b):
             expoent = 0
             size = 0
             cont = -1
@@ -4506,121 +4575,131 @@ def outros_inteiro():
             sum = 0
             while size < len(num):
                 if b == 1:
-                    value = int(encode[str(num[cont])]) * pow(base,expoent)
+                    value = int(encode[str(num[cont])]) * pow(base, expoent)
                 else:
-                    value = int(num[cont]) * pow(base,expoent)
-                expoent += 1            
+                    value = int(num[cont]) * pow(base, expoent)
+                expoent += 1
                 size += 1
                 position += 1
                 cont -= 1
                 sum += value
-            print('='*50)
+            print('=' * 50)
             print(f'The {num} in decimal number is: {sum}')
             print(f'Caracters numbers: {len(str(sum))}')
-            print('='*50)
-            
+            print('=' * 50)
+
         kanji = input("É uma converção usando kanji? ").upper()
         if kanji == "S":
             num.upper()
-            base=16
-            print('='*50)
-            print('='*50)
-            calculador(encode_kanji_int,base,1)
+            base = 16
+            print('=' * 50)
+            print('=' * 50)
+            calculador(encode_kanji_int, base, 1)
         else:
-            if (num_dec == True):
+            if num_dec:
                 base = int(input('Write the base: '))
-                calculador(encode_numero,base,0)
+                calculador(encode_numero, base, 0)
 
             elif (num_dec == False) and (num_alph == True):
-                base=16
-                print('='*50)
-                print('='*50)
-                calculador(encode_alpha_int,base,1)
+                base = 16
+                print('=' * 50)
+                print('=' * 50)
+                calculador(encode_alpha_int, base, 1)
 
-                
+
             elif (num_dec == False) and (num_alphanum == True):
                 base = 0
                 value = 0
-                print('='*50)
+                print('=' * 50)
                 nnn = input("O valor é alpha numérico: ").upper()
-                if nnn =="S":
+                if nnn == "S":
                     hexi = input('hexadecimal code? S/N').upper()
                     if hexi == "S":
-                        print('='*50)
-                        print('='*50)
+                        print('=' * 50)
+                        print('=' * 50)
                         print("Converção hexadecimal")
-                        base=16
-                        calculador(encode_alphanum_int,base,1)
-                    #elif (vvv == True) and (aaa == True):
+                        base = 16
+                        calculador(encode_alphanum_int, base, 1)
+                    # elif (vvv == True) and (aaa == True):
                     else:
-                        print('='*50)
-                        print('='*50)    
+                        print('=' * 50)
+                        print('=' * 50)
                         print("alpha numerico de 35 unidade")
-                        base=25
-                        calculador(encode_alphanum_int,base,1)
-                        
-                    
-
+                        base = 25
+                        calculador(encode_alphanum_int, base, 1)
                 else:
-                    calculador(encode_alpha_int,26)
+                    calculador(encode_alpha_int, base, 26)
         option = input('continue? ').upper()
 
-print('''
-[1] Inteiro -> outros
-[2] outros -. inteiro
-''')
-opcao = input("selecionar: ")
-if opcao == "1":
-    print('''
-[1] Hexadecimal
-[2] Octal
-[3] binário
-[4] alfabetico
-[5] alfa numerico
-[6] kanji
-[7] outra base
-[8] tudo
-''')
-    po = input("selecionar: ")
-    numero = int(input("Digite o número inteiro para ser convertido em outros codigos: "))
-    print("_"*50)
-    if po == "1":
-        inteiro_outros(encode_int_hex,numero,16)
-    elif po == "2":
-        inteiro_outros(encode_numero,numero,8)
-    elif po == "3":
-        inteiro_outros(encode_numero,numero,2)
-    elif po == "4":
-        inteiro_outros(encode_int_alpha,numero,26)
-    elif po == "5":
-        inteiro_outros(encode_int_alphanum,numero,35)
-    elif po == "6":
-        inteiro_outros(encode_int_kanji,numero,2136)
-    elif po == "7":
-        base = int(input("Base: "))
-        inteiro_outros(encode_numero,numero,base)
-    elif po == "8":
-    
-        print(f"Hexadecimal:")
-        inteiro_outros(encode_int_hex,numero,16)
-        print(f"Octal:")
-        inteiro_outros(encode_numero,numero,8)
-        print(f"Binário:")
-        inteiro_outros(encode_numero,numero,2)
-        print(f"Alfabetico:")
-        inteiro_outros(encode_int_alpha,numero,26)
-        print(f"alfa numerico:")
-        inteiro_outros(encode_int_alphanum,numero,35)
-        print(f"20136 kanjis:")
-        inteiro_outros(encode_int_kanji,numero,2136)
-        n=2
-        for i in range (9):
-            base = n
-            print("."*50)
-            print(f"Base {n}:")
-            inteiro_outros(encode_numero,numero,base) 
-            n +=1    
 
-    
-else:
-    outros_inteiro()
+while True:
+    print('='*50)
+    option = 'S'
+    print('''
+    [1] Inteiro -> outros
+    [2] outros -. inteiro
+    ''')
+    opcao = input("selecionar: ")
+    if opcao == "1":
+        print('''
+    [1] Hexadecimal
+    [2] Octal
+    [3] binário
+    [4] alfabetico
+    [5] alfa numerico
+    [6] kanji
+    [7] outra base
+    [8] tudo
+    ''')
+        po = input("selecionar: ")
+        numero = int(input("Digite o número inteiro para ser convertido em outros codigos: "))
+        print("_"*50)
+        if po == "1":
+            inteiro_outros(encode_int_hex,numero,16)
+        elif po == "2":
+            inteiro_outros(encode_numero,numero,8)
+        elif po == "3":
+            inteiro_outros(encode_numero,numero,2)
+        elif po == "4":
+            inteiro_outros(encode_int_alpha,numero,26)
+        elif po == "5":
+            inteiro_outros(encode_int_alphanum,numero,35)
+        elif po == "6":
+            inteiro_outros(encode_int_kanji,numero,2136)
+        elif po == "7":
+            base = int(input("Base: "))
+            inteiro_outros(encode_numero,numero,base)
+        elif po == "8":
+            print(f"Hexadecimal:")
+            inteiro_outros(encode_int_hex,numero,16)
+            print(f"Octal:")
+            inteiro_outros(encode_numero,numero,8)
+            print(f"Binário:")
+            inteiro_outros(encode_numero,numero,2)
+            print(f"Alfabetico:")
+            inteiro_outros(encode_int_alpha,numero,26)
+            print(f"alfa numerico:")
+            inteiro_outros(encode_int_alphanum,numero,35)
+            print(f"20136 kanjis:")
+            inteiro_outros(encode_int_kanji,numero,2136)
+            n=2
+            for i in range (9):
+                base = n
+                print("."*50)
+                print(f"Base {n}:")
+                inteiro_outros(encode_numero,numero,base)
+                n +=1
+    else:
+        outros_inteiro()
+
+    sair = 'N'
+    while sair != 'Y':
+        sair = str(input('\nDeseja sair (Y/N): ')).upper().strip(" SIMAÃOE")
+        if sair == 'N':
+            break
+        elif sair == 'Y':
+            break
+        else:
+            print('\nOPÇÃO INVÁLIDA! DIGITE UM VALOR VÁLIDO!')
+    if sair == 'Y':
+        break
