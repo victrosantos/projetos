@@ -4478,8 +4478,6 @@ encode_numero = {
 '0':'0'
 }
 
-import pykakasi as kks
-
 
 def inteiro_outros(encode, numero, base):
     numero_inteiro = numero  # não precisa mais dessa variavel
@@ -4538,7 +4536,7 @@ def inteiro_outros(encode, numero, base):
                 elif len(vals) >= 13:
                     print(f'{KANJIS[1000000000000]}', end='')
             vals.remove(vals[0])
-    else:
+    else:  # Daqui pra baixo não mudei nada pq segue o msm principio
         while numero_inteiro > 0:
             resto = numero_inteiro % base
             if type(base) == int:
