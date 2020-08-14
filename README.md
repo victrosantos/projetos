@@ -1,2 +1,4 @@
 # projetos
-testes e projetos compartilhaves à comunidade
+Projeto do alexisjunkes que eu mudei algumas coisas.
+
+https://github.com/alexisjunkes/projetos
